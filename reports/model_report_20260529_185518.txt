@@ -1,0 +1,105 @@
+Home-Repair Risk Classification Model Report
+
+Training file: data\training\home_repair_training_weak_20260529_185336.csv
+Rows used: 619
+Train rows: 464
+Test rows: 155
+Label distribution: {"low_risk_diy": 153, "medium_risk_call_pro": 274, "urgent_safety_risk": 192}
+
+Important: these metrics evaluate against weak labels, not expert human ground truth.
+Use the audit sample for a separate human sanity check.
+
+Model: linear_svm
+Accuracy: 0.819
+Macro-F1: 0.824
+Confusion matrix rows/columns:
+low_risk_diy, medium_risk_call_pro, urgent_safety_risk
+[[32, 4, 2], [2, 60, 7], [0, 13, 35]]
+
+                      precision    recall  f1-score   support
+
+        low_risk_diy       0.94      0.84      0.89        38
+medium_risk_call_pro       0.78      0.87      0.82        69
+  urgent_safety_risk       0.80      0.73      0.76        48
+
+            accuracy                           0.82       155
+           macro avg       0.84      0.81      0.82       155
+        weighted avg       0.82      0.82      0.82       155
+
+
+Model: random_forest
+Accuracy: 0.806
+Macro-F1: 0.815
+Confusion matrix rows/columns:
+low_risk_diy, medium_risk_call_pro, urgent_safety_risk
+[[31, 6, 1], [1, 57, 11], [0, 11, 37]]
+
+                      precision    recall  f1-score   support
+
+        low_risk_diy       0.97      0.82      0.89        38
+medium_risk_call_pro       0.77      0.83      0.80        69
+  urgent_safety_risk       0.76      0.77      0.76        48
+
+            accuracy                           0.81       155
+           macro avg       0.83      0.80      0.82       155
+        weighted avg       0.81      0.81      0.81       155
+
+
+Model: logistic_regression
+Accuracy: 0.806
+Macro-F1: 0.813
+Confusion matrix rows/columns:
+low_risk_diy, medium_risk_call_pro, urgent_safety_risk
+[[32, 4, 2], [1, 57, 11], [1, 11, 36]]
+
+                      precision    recall  f1-score   support
+
+        low_risk_diy       0.94      0.84      0.89        38
+medium_risk_call_pro       0.79      0.83      0.81        69
+  urgent_safety_risk       0.73      0.75      0.74        48
+
+            accuracy                           0.81       155
+           macro avg       0.82      0.81      0.81       155
+        weighted avg       0.81      0.81      0.81       155
+
+
+Model: decision_tree
+Accuracy: 0.768
+Macro-F1: 0.762
+Confusion matrix rows/columns:
+low_risk_diy, medium_risk_call_pro, urgent_safety_risk
+[[30, 3, 5], [2, 56, 11], [6, 9, 33]]
+
+                      precision    recall  f1-score   support
+
+        low_risk_diy       0.79      0.79      0.79        38
+medium_risk_call_pro       0.82      0.81      0.82        69
+  urgent_safety_risk       0.67      0.69      0.68        48
+
+            accuracy                           0.77       155
+           macro avg       0.76      0.76      0.76       155
+        weighted avg       0.77      0.77      0.77       155
+
+
+Model: naive_bayes
+Accuracy: 0.710
+Macro-F1: 0.702
+Confusion matrix rows/columns:
+low_risk_diy, medium_risk_call_pro, urgent_safety_risk
+[[21, 17, 0], [1, 61, 7], [0, 20, 28]]
+
+                      precision    recall  f1-score   support
+
+        low_risk_diy       0.95      0.55      0.70        38
+medium_risk_call_pro       0.62      0.88      0.73        69
+  urgent_safety_risk       0.80      0.58      0.67        48
+
+            accuracy                           0.71       155
+           macro avg       0.79      0.67      0.70       155
+        weighted avg       0.76      0.71      0.71       155
+
+
+Top weighted terms for best model: linear_svm
+low_risk_diy: paint, trim, caulk, loose, peeling, silicone, caulking, door, peel, fix, wood, wallpaper
+medium_risk_call_pro: leak, mold, water, leaking, issue, heater, plumbing, toilet, 50, furnace, leaked, issues
+urgent_safety_risk: flood, outlet, wire, flooded, gas, smoke, light, gas smell, sparks, flooding, plug, flood light
