@@ -1,0 +1,100 @@
+DIY Repair Risk Classification Model Report
+
+Training file: data\training\weak_training_pool_20260604_181427.csv
+Rows used: 1503
+Train rows: 1127
+Test rows: 376
+Label distribution: {"low_risk_diy": 189, "medium_risk_call_pro": 1058, "urgent_safety_risk": 256}
+
+Important: these metrics evaluate against weak labels, not expert human ground truth.
+Use the audit sample for a separate human sanity check.
+
+Model: random_forest
+Accuracy: 0.888
+Macro-F1: 0.830
+Confusion matrix rows/columns:
+low_risk_diy, medium_risk_call_pro, urgent_safety_risk
+[[34, 13, 0], [1, 261, 3], [0, 25, 39]]
+
+                      precision    recall  f1-score   support
+
+        low_risk_diy       0.97      0.72      0.83        47
+medium_risk_call_pro       0.87      0.98      0.93       265
+  urgent_safety_risk       0.93      0.61      0.74        64
+
+            accuracy                           0.89       376
+           macro avg       0.92      0.77      0.83       376
+        weighted avg       0.89      0.89      0.88       376
+
+
+Model: logistic_regression
+Accuracy: 0.856
+Macro-F1: 0.817
+Confusion matrix rows/columns:
+low_risk_diy, medium_risk_call_pro, urgent_safety_risk
+[[37, 9, 1], [2, 237, 26], [0, 16, 48]]
+
+                      precision    recall  f1-score   support
+
+        low_risk_diy       0.95      0.79      0.86        47
+medium_risk_call_pro       0.90      0.89      0.90       265
+  urgent_safety_risk       0.64      0.75      0.69        64
+
+            accuracy                           0.86       376
+           macro avg       0.83      0.81      0.82       376
+        weighted avg       0.87      0.86      0.86       376
+
+
+Model: linear_svm
+Accuracy: 0.870
+Macro-F1: 0.807
+Confusion matrix rows/columns:
+low_risk_diy, medium_risk_call_pro, urgent_safety_risk
+[[32, 14, 1], [1, 254, 10], [0, 23, 41]]
+
+                      precision    recall  f1-score   support
+
+        low_risk_diy       0.97      0.68      0.80        47
+medium_risk_call_pro       0.87      0.96      0.91       265
+  urgent_safety_risk       0.79      0.64      0.71        64
+
+            accuracy                           0.87       376
+           macro avg       0.88      0.76      0.81       376
+        weighted avg       0.87      0.87      0.86       376
+
+
+Model: decision_tree
+Accuracy: 0.854
+Macro-F1: 0.804
+Confusion matrix rows/columns:
+low_risk_diy, medium_risk_call_pro, urgent_safety_risk
+[[41, 3, 3], [15, 230, 20], [2, 12, 50]]
+
+                      precision    recall  f1-score   support
+
+        low_risk_diy       0.71      0.87      0.78        47
+medium_risk_call_pro       0.94      0.87      0.90       265
+  urgent_safety_risk       0.68      0.78      0.73        64
+
+            accuracy                           0.85       376
+           macro avg       0.78      0.84      0.80       376
+        weighted avg       0.87      0.85      0.86       376
+
+
+Model: naive_bayes
+Accuracy: 0.707
+Macro-F1: 0.290
+Confusion matrix rows/columns:
+low_risk_diy, medium_risk_call_pro, urgent_safety_risk
+[[1, 46, 0], [0, 265, 0], [0, 64, 0]]
+
+                      precision    recall  f1-score   support
+
+        low_risk_diy       1.00      0.02      0.04        47
+medium_risk_call_pro       0.71      1.00      0.83       265
+  urgent_safety_risk       0.00      0.00      0.00        64
+
+            accuracy                           0.71       376
+           macro avg       0.57      0.34      0.29       376
+        weighted avg       0.62      0.71      0.59       376
+

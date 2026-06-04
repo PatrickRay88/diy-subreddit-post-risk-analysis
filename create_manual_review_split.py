@@ -203,9 +203,13 @@ def main() -> None:
     if len(args.reviewers) < 1:
         raise ValueError("At least one reviewer is required")
 
-    input_path = args.input or newest_csv(
-        Path("data/weak_labels"), "home_repair_weak_labeled_*.csv"
-    )
+    if args.input:
+        input_path = args.input
+    else:
+        try:
+            input_path = newest_csv(Path("data/weak_labels"), "diy_repair_weak_labeled_*.csv")
+        except FileNotFoundError:
+            input_path = newest_csv(Path("data/weak_labels"), "home_repair_weak_labeled_*.csv")
     rows, fieldnames = read_rows(input_path)
     if args.review_size >= len(rows):
         raise ValueError("review-size must be smaller than the full dataset")

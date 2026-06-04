@@ -22,7 +22,11 @@ LABEL_CHOICES = {
 
 def newest_raw_csv(raw_dir: Path) -> Path:
     files = sorted(
-        raw_dir.glob("reddit_home_repair_posts_*.csv"),
+        [
+            path
+            for pattern in ["reddit_diy_repair_posts_*.csv", "reddit_home_repair_posts_*.csv"]
+            for path in raw_dir.glob(pattern)
+        ],
         key=lambda path: path.stat().st_mtime,
         reverse=True,
     )
@@ -79,7 +83,7 @@ def parse_args() -> argparse.Namespace:
         "--output",
         type=Path,
         default=None,
-        help="Output labeling CSV. Defaults to data/labeling/home_repair_labeling_<timestamp>.csv.",
+        help="Output labeling CSV. Defaults to data/labeling/diy_repair_labeling_<timestamp>.csv.",
     )
     return parser.parse_args()
 
@@ -90,7 +94,7 @@ def main() -> None:
     output_path = args.output
     if output_path is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = Path("data/labeling") / f"home_repair_labeling_{timestamp}.csv"
+        output_path = Path("data/labeling") / f"diy_repair_labeling_{timestamp}.csv"
 
     row_count = prepare_labeling_file(input_path=input_path, output_path=output_path)
     print(f"Prepared {row_count} rows for labeling")

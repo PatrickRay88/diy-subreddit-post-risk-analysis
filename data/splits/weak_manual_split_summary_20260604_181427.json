@@ -1,0 +1,38 @@
+{
+  "input": "data\\weak_labels\\diy_repair_weak_labeled_20260604_181413.csv",
+  "manual_review_file": "data\\manual_review\\manual_review_set_20260604_181427.csv",
+  "weak_training_file": "data\\training\\weak_training_pool_20260604_181427.csv",
+  "review_size": 400,
+  "weak_training_size": 1503,
+  "min_confidence": 0.75,
+  "seed": 42,
+  "reviewers": {
+    "1": "Patrick",
+    "2": "Sarah",
+    "3": "Max",
+    "4": "Manthan"
+  },
+  "per_reviewer_files": {
+    "1-Patrick": "data\\manual_review\\manual_review_reviewer_1_Patrick_20260604_181427.csv",
+    "2-Sarah": "data\\manual_review\\manual_review_reviewer_2_Sarah_20260604_181427.csv",
+    "3-Max": "data\\manual_review\\manual_review_reviewer_3_Max_20260604_181427.csv",
+    "4-Manthan": "data\\manual_review\\manual_review_reviewer_4_Manthan_20260604_181427.csv"
+  },
+  "review_bucket_distribution": {
+    "low_risk_diy": 100,
+    "medium_risk_call_pro": 100,
+    "needs_human_review": 100,
+    "urgent_safety_risk": 100
+  },
+  "reviewer_distribution": {
+    "Manthan": 100,
+    "Max": 100,
+    "Patrick": 100,
+    "Sarah": 100
+  },
+  "training_label_distribution": {
+    "medium_risk_call_pro": 1058,
+    "urgent_safety_risk": 256,
+    "low_risk_diy": 189
+  }
+}

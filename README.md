@@ -1,6 +1,6 @@
-# Home-Repair Reddit Post Risk Analysis
+# DIY Repair Reddit Post Risk Analysis
 
-This project builds a text-classification pipeline for Reddit home-repair posts.
+This project builds a text-classification pipeline for Reddit DIY repair posts.
 The goal is to classify original post text into practical repair-risk levels:
 
 - `low_risk_diy`
@@ -14,17 +14,17 @@ circular evaluation.
 
 Current main dataset:
 
-- 2,000 scraped Reddit posts
-- 2,000 weak-labeled rows
-- 300 held-out manual-review rows
-- 1,348 high-confidence weak-labeled training rows after removing the holdout
+- 2,500 scraped Reddit posts
+- 2,500 weak-labeled rows
+- 400 held-out manual-review rows
+- 1,503 high-confidence weak-labeled training rows after removing the holdout
 
 Current reviewer assignments:
 
-- Patrick: 75 rows
-- Sarah: 75 rows
-- Max: 75 rows
-- Manthan: 75 rows
+- Patrick: 100 rows
+- Sarah: 100 rows
+- Max: 100 rows
+- Manthan: 100 rows
 
 Start here:
 
@@ -34,12 +34,12 @@ Start here:
 
 ## Key Files
 
-- Raw data: `data/raw/reddit_home_repair_posts_20260604_172614.csv`
-- Full weak-labeled data: `data/weak_labels/home_repair_weak_labeled_20260604_172800.csv`
-- Manual review set: `data/manual_review/manual_review_set_20260604_172815.csv`
-- Weak training pool: `data/training/weak_training_pool_20260604_172815.csv`
-- Latest model report: `reports/model_report_20260604_172833.txt`
-- Project summary doc: `docs/Home_Repair_Risk_Project_Summary_20260604.docx`
+- Raw data: `data/raw/reddit_diy_repair_posts_20260604_180921.csv`
+- Full weak-labeled data: `data/weak_labels/diy_repair_weak_labeled_20260604_181413.csv`
+- Manual review set: `data/manual_review/manual_review_set_20260604_181427.csv`
+- Weak training pool: `data/training/weak_training_pool_20260604_181427.csv`
+- Latest model report: `reports/model_report_20260604_181435.txt`
+- Project summary doc: `docs/DIY_Repair_Risk_Project_Summary_20260604.docx`
 
 ## Method Overview
 
@@ -47,7 +47,8 @@ The project has two labeling/evaluation layers.
 
 First, `auto_label_dataset.py` creates weak labels using hand-written rules.
 These rules look for phrases associated with gas, sparks, flooding, leaks,
-mold, wiring, HVAC, plumbing, paint, caulk, trim, and similar repair signals.
+mold, wiring, HVAC, plumbing, paint, caulk, trim, vehicle brakes, fuel leaks,
+tires, steering, suspension, and similar repair signals.
 
 Second, the team manually reviews a held-out 300-row sample. Those rows are not
 used for weak-label training. They will be used for final evaluation.
@@ -85,37 +86,37 @@ REDDIT_PASSWORD=your_password
 Scrape posts:
 
 ```powershell
-python reddit_scraper.py --max-posts 2000 --max-posts-per-subreddit 400 --max-posts-per-query 200 --pages-per-query 4 --delay 1
+python reddit_scraper.py --max-posts 2500 --max-posts-per-subreddit 350 --max-posts-per-query 125 --pages-per-query 4 --delay 1
 ```
 
 Prepare a labeling copy:
 
 ```powershell
-python prepare_labeling_dataset.py --input data\raw\reddit_home_repair_posts_20260604_172614.csv --output data\labeling\home_repair_labeling_20260604_172614.csv
+python prepare_labeling_dataset.py --input data\raw\reddit_diy_repair_posts_20260604_180921.csv --output data\labeling\diy_repair_labeling_20260604_180921.csv
 ```
 
 Weak-label the full dataset:
 
 ```powershell
-python auto_label_dataset.py --input data\labeling\home_repair_labeling_20260604_172614.csv --audit-size 0
+python auto_label_dataset.py --input data\labeling\diy_repair_labeling_20260604_180921.csv --audit-size 0
 ```
 
 Create the held-out manual-review split:
 
 ```powershell
-python create_manual_review_split.py --input data\weak_labels\home_repair_weak_labeled_20260604_172800.csv --review-size 300 --reviewers Patrick Sarah Max Manthan --seed 42
+python create_manual_review_split.py --input data\weak_labels\diy_repair_weak_labeled_20260604_181413.csv --review-size 400 --reviewers Patrick Sarah Max Manthan --seed 42
 ```
 
 Train baseline models on the weak-label training pool:
 
 ```powershell
-python train_models.py --input data\training\weak_training_pool_20260604_172815.csv
+python train_models.py --input data\training\weak_training_pool_20260604_181427.csv
 ```
 
 After human review is complete, evaluate against human labels:
 
 ```powershell
-python evaluate_human_review.py --manual-review data\manual_review\manual_review_set_20260604_172815.csv
+python evaluate_human_review.py --manual-review data\manual_review\manual_review_set_20260604_181427.csv
 ```
 
 ## Manual Review
@@ -162,8 +163,8 @@ model.
 Current best weak-label test result:
 
 - Random Forest
-- Accuracy: `0.872`
-- Macro-F1: `0.875`
+- Accuracy: `0.888`
+- Macro-F1: `0.830`
 
 These metrics are weak-label agreement, not final human-validated accuracy.
 

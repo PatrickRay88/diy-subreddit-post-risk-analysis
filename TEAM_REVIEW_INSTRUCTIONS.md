@@ -6,16 +6,16 @@ Use this file as the quick checklist for the team labeling task.
 
 Shared file:
 
-`data/manual_review/manual_review_set_20260604_172815.csv`
+`data/manual_review/manual_review_set_20260604_181427.csv`
 
 Individual files:
 
-- Patrick: `data/manual_review/manual_review_reviewer_1_Patrick_20260604_172815.csv`
-- Sarah: `data/manual_review/manual_review_reviewer_2_Sarah_20260604_172815.csv`
-- Max: `data/manual_review/manual_review_reviewer_3_Max_20260604_172815.csv`
-- Manthan: `data/manual_review/manual_review_reviewer_4_Manthan_20260604_172815.csv`
+- Patrick: `data/manual_review/manual_review_reviewer_1_Patrick_20260604_181427.csv`
+- Sarah: `data/manual_review/manual_review_reviewer_2_Sarah_20260604_181427.csv`
+- Max: `data/manual_review/manual_review_reviewer_3_Max_20260604_181427.csv`
+- Manthan: `data/manual_review/manual_review_reviewer_4_Manthan_20260604_181427.csv`
 
-Each reviewer has 75 rows.
+Each reviewer has 100 rows.
 
 ## Reviewer Numbers
 
@@ -69,7 +69,7 @@ Use only the original post text. Do not use Reddit comments.
 
 Quick rule:
 
-- Cosmetic/minor/routine: `low_risk_diy`
+- Cosmetic/minor/routine maintenance: `low_risk_diy`
 - Needs professional or timely repair: `medium_risk_call_pro`
 - Immediate danger or major active damage: `urgent_safety_risk`
 - Not enough usable information: `exclude_unclear`
@@ -82,6 +82,12 @@ Example:
 - A caulking post with a basement leak is probably `medium_risk_call_pro`.
 - A painting post with sparks or burning smell is probably `urgent_safety_risk`.
 - A small drywall patch with no safety issue is probably `low_risk_diy`.
+- A wiper blade, air filter, or cosmetic car trim post is probably
+  `low_risk_diy`.
+- A brake, suspension, drivetrain, or transmission repair question is usually
+  `medium_risk_call_pro`.
+- A fuel leak, loose wheel, brake failure, or steering failure is usually
+  `urgent_safety_risk`.
 
 ## How To Use The Auto Label
 

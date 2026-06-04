@@ -1,4 +1,4 @@
-# Home-Repair Reddit Risk Labeling Guide
+# DIY Repair Reddit Risk Labeling Guide
 
 This guide is for the human-review part of the project. Use it when filling in
 the manual review CSV files in `data/manual_review/`.
@@ -106,12 +106,12 @@ Common reasons:
 - Deleted or removed text
 - Pure image post with no meaningful description
 - Joke, rant, update, or unrelated post
-- Not really home repair
+- Not really a DIY repair or maintenance question
 - Too little context to infer risk
 - The important information appears to depend on comments or missing photos
 
 Do not use `exclude_unclear` just because the case is hard. If it is a real
-home-repair situation but uncertain, choose the best risk label and set
+DIY repair situation but uncertain, choose the best risk label and set
 `human_confidence` to `low`.
 
 ## Tie-Breaking Rules
@@ -128,6 +128,11 @@ Examples:
   `urgent_safety_risk`, because the spark matters more than the painting.
 - "Small cosmetic crack in drywall" should usually be `low_risk_diy` unless the
   post describes structural movement, sagging, or foundation issues.
+- "Replacing wiper blades" should usually be `low_risk_diy`.
+- "Replacing brakes or suspension parts" should usually be
+  `medium_risk_call_pro` unless the post describes active failure.
+- "Loose wheel, brake failure, fuel leak, or steering failure" should usually be
+  `urgent_safety_risk`.
 
 If the risk is unclear but real, use `medium_risk_call_pro` as the conservative
 middle label.
@@ -194,16 +199,16 @@ Good note examples:
 
 ## Current Reviewer Assignments
 
-The current manual-review set has 300 rows.
+The current manual-review set has 400 rows.
 
-- `1`: Patrick, 75 rows
-- `2`: Sarah, 75 rows
-- `3`: Max, 75 rows
-- `4`: Manthan, 75 rows
+- `1`: Patrick, 100 rows
+- `2`: Sarah, 100 rows
+- `3`: Max, 100 rows
+- `4`: Manthan, 100 rows
 
 The shared file is:
 
-`data/manual_review/manual_review_set_20260604_172815.csv`
+`data/manual_review/manual_review_set_20260604_181427.csv`
 
 Individual reviewer files are in:
 
@@ -212,7 +217,7 @@ Individual reviewer files are in:
 ## Why This Matters
 
 The weak labeler created rough labels for a large dataset, but those labels are
-not ground truth. The 300 manually reviewed rows are held out from training and
+not ground truth. The 400 manually reviewed rows are held out from training and
 will be used for the final, less circular evaluation.
 
 Final evaluation will compare:

@@ -1,4 +1,4 @@
-"""Collect original Reddit home-repair posts for a risk-labeling dataset.
+"""Collect original Reddit DIY-repair posts for a risk-labeling dataset.
 
 This scraper uses Reddit's public JSON listings and stores only the original
 post title/body, not comments. The output is intentionally unlabeled; optional
@@ -32,31 +32,57 @@ DEFAULT_SUBREDDITS = [
     "askanelectrician",
     "hvacadvice",
     "Homeowners",
+    "MechanicAdvice",
+    "AskMechanics",
+    "cartalk",
+    "AutoDIY",
 ]
 
 DEFAULT_QUERIES = [
     "leak",
+    "brake failure",
     "gas smell",
+    "oil change",
     "loose trim",
+    "wheel loose",
     "mold",
+    "brake pads",
     "sparking outlet",
+    "fuel leak",
     "paint peeling",
+    "tire blowout",
     "water leak",
+    "suspension",
     "caulk",
+    "transmission slipping",
     "flooding",
+    "wiper blades",
     "electrical issue",
+    "steering issue",
     "drywall patch",
+    "coolant leak",
     "foundation crack",
+    "headlight bulb",
     "black mold",
+    "jack stands",
     "water heater",
+    "engine overheating",
     "stain",
+    "spark plugs",
     "crack wall",
+    "alternator",
     "structural crack",
+    "air filter",
     "burning smell",
+    "lug nuts",
     "cosmetic fix",
+    "brake fluid leak",
     "breaker keeps tripping",
+    "radiator leak",
     "wiring",
+    "drivetrain",
     "hvac not working",
+    "starter motor",
     "paint",
     "furnace",
     "roof leak",
@@ -425,7 +451,7 @@ def write_csv(posts: list[RedditPost], path: Path) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Scrape original Reddit home-repair posts for manual labeling."
+        description="Scrape original Reddit DIY-repair posts for manual labeling."
     )
     parser.add_argument("--max-posts", type=int, default=750)
     parser.add_argument(
@@ -472,7 +498,7 @@ def main() -> None:
     user_agent = (
         args.user_agent
         or os.getenv("REDDIT_USER_AGENT")
-        or "home-repair-risk-ml-dataset/0.1 by student-project"
+        or "diy-repair-risk-ml-dataset/0.1 by student-project"
     )
     oauth_token = None
     if client_id and client_secret:
@@ -505,8 +531,8 @@ def main() -> None:
         oauth_token=oauth_token,
     )
 
-    jsonl_path = args.out_dir / f"reddit_home_repair_posts_{timestamp}.jsonl"
-    csv_path = args.out_dir / f"reddit_home_repair_posts_{timestamp}.csv"
+    jsonl_path = args.out_dir / f"reddit_diy_repair_posts_{timestamp}.jsonl"
+    csv_path = args.out_dir / f"reddit_diy_repair_posts_{timestamp}.csv"
     write_jsonl(posts, jsonl_path)
     write_csv(posts, csv_path)
 

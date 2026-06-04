@@ -1,4 +1,4 @@
-"""Apply weak-supervision labels to the Reddit home-repair dataset.
+"""Apply weak-supervision labels to the Reddit DIY-repair dataset.
 
 The output is not treated as human ground truth. It is a practical weak-label
 dataset with confidence scores, reasons, and a small audit sample for review.
@@ -53,7 +53,7 @@ RULE_GROUPS = (
         label=URGENT,
         weight=3.5,
         patterns=(
-            r"\bspark(?:s|ing|ed)?\b",
+            r"\bspark(?:s|ing|ed)?\b(?!\s+plugs?\b)",
             r"\barc(?:ing|ed)?\b",
             r"\bsmoke\b",
             r"\bburning smell\b",
@@ -62,6 +62,41 @@ RULE_GROUPS = (
             r"\bhot outlet\b",
             r"\belectrical fire\b",
             r"\bfire hazard\b",
+        ),
+    ),
+    RuleGroup(
+        name="vehicle_brake_wheel_or_steering_danger",
+        label=URGENT,
+        weight=3.5,
+        patterns=(
+            r"\bbrake(?:s)? fail(?:ed|ing|ure)?\b",
+            r"\bno brakes\b",
+            r"\bbrake pedal (?:goes|went) to the floor\b",
+            r"\bbrake fluid leak\b",
+            r"\bwheel (?:is )?loose\b",
+            r"\bwheel (?:came|fell) off\b",
+            r"\bloose lug nuts?\b",
+            r"\blug nuts? (?:are )?loose\b",
+            r"\btire blowout\b",
+            r"\bsteering (?:failed|failure|locked|loose)\b",
+            r"\bcar (?:fell|slipped) off (?:the )?jack\b",
+            r"\bjack stands? failed\b",
+        ),
+    ),
+    RuleGroup(
+        name="vehicle_fuel_or_overheat_danger",
+        label=URGENT,
+        weight=3.2,
+        patterns=(
+            r"\bfuel leak\b",
+            r"\bleaking fuel\b",
+            r"\bgasoline leak\b",
+            r"\bfuel smell\b",
+            r"\bsmell(?:s|ing)? (?:like )?gasoline\b",
+            r"\bengine fire\b",
+            r"\bcar fire\b",
+            r"\bengine overheated\b",
+            r"\boverheating while driving\b",
         ),
     ),
     RuleGroup(
@@ -130,6 +165,43 @@ RULE_GROUPS = (
         ),
     ),
     RuleGroup(
+        name="vehicle_mechanical_system_issue",
+        label=MEDIUM,
+        weight=2.0,
+        patterns=(
+            r"\bbrake pads?\b",
+            r"\bbrake rotors?\b",
+            r"\bbrake replacement\b",
+            r"\bbrake service\b",
+            r"\bbrake job\b",
+            r"\bbrake trouble\b",
+            r"\bcalipers?\b",
+            r"\bsuspension\b",
+            r"\bstruts?\b",
+            r"\bshocks?\b",
+            r"\bball joints?\b",
+            r"\btie rods?\b",
+            r"\bcontrol arms?\b",
+            r"\bwheel bearings?\b",
+            r"\bdrivetrain\b",
+            r"\bdrive train\b",
+            r"\btransmission\b",
+            r"\bclutch\b",
+            r"\btiming belt\b",
+            r"\bfuel line\b",
+            r"\bradiator\b",
+            r"\bcoolant leak\b",
+            r"\balternator\b",
+            r"\bstarter motor\b",
+            r"\bcheck engine\b",
+            r"\bengine misfire\b",
+            r"\bmisfire\b",
+            r"\brough idle\b",
+            r"\bidle (?:surge|surging|pulsing)\b",
+            r"\bengine (?:surge|surging|pulsing)\b",
+        ),
+    ),
+    RuleGroup(
         name="mold_or_foundation_concern",
         label=MEDIUM,
         weight=2.0,
@@ -162,6 +234,26 @@ RULE_GROUPS = (
             r"\bloose knob\b",
             r"\bcabinet hinge\b",
             r"\bsqueaky door\b",
+        ),
+    ),
+    RuleGroup(
+        name="vehicle_low_risk_maintenance",
+        label=LOW,
+        weight=2.2,
+        patterns=(
+            r"\boil change\b",
+            r"\b(?:replace|replacing|change|changing|install|installing) (?:the )?wiper blades?\b",
+            r"\b(?:replace|replacing|change|changing|install|installing) (?:the )?cabin air filter\b",
+            r"\b(?:replace|replacing|change|changing|install|installing) (?:the )?air filter\b",
+            r"\b(?:replace|replacing|change|changing|install|installing) (?:the )?headlight bulbs?\b",
+            r"\b(?:replace|replacing|change|changing|install|installing) (?:the )?taillight bulbs?\b",
+            r"\b(?:replace|replacing|change|changing|install|installing) (?:the )?tail light bulbs?\b",
+            r"\b(?:replace|replacing|change|changing|install|installing) (?:the )?license plate light\b",
+            r"\binterior trim\b",
+            r"\bdetailing\b",
+            r"\bcar stereo\b",
+            r"\b(?:replace|replacing|change|changing|install|installing) (?:the )?spark plugs?\b",
+            r"\bspark plug replacement\b",
         ),
     ),
 )
@@ -396,7 +488,7 @@ def count_by(rows: list[dict[str, str]], column: str) -> dict[str, int]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create weak-supervision labels for the home-repair dataset."
+        description="Create weak-supervision labels for the DIY-repair dataset."
     )
     parser.add_argument(
         "--input",
@@ -422,13 +514,17 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    input_path = args.input or newest_csv(
-        Path("data/labeling"), "home_repair_labeling_*.csv"
-    )
+    if args.input:
+        input_path = args.input
+    else:
+        try:
+            input_path = newest_csv(Path("data/labeling"), "diy_repair_labeling_*.csv")
+        except FileNotFoundError:
+            input_path = newest_csv(Path("data/labeling"), "home_repair_labeling_*.csv")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    weak_path = Path("data/weak_labels") / f"home_repair_weak_labeled_{timestamp}.csv"
-    train_path = Path("data/training") / f"home_repair_training_weak_{timestamp}.csv"
-    audit_path = Path("data/audit") / f"home_repair_audit_sample_{timestamp}.csv"
+    weak_path = Path("data/weak_labels") / f"diy_repair_weak_labeled_{timestamp}.csv"
+    train_path = Path("data/training") / f"diy_repair_training_weak_{timestamp}.csv"
+    audit_path = Path("data/audit") / f"diy_repair_audit_sample_{timestamp}.csv"
 
     rows, fieldnames = read_rows(input_path)
     enriched = enrich_rows(

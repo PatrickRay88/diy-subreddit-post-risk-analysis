@@ -1,4 +1,4 @@
-"""Train classical ML models on the weak-labeled home-repair dataset."""
+"""Train classical ML models on the weak-labeled DIY-repair dataset."""
 
 from __future__ import annotations
 
@@ -170,7 +170,11 @@ def main() -> None:
     args = parse_args()
     input_path = args.input or newest_csv(
         Path("data/training"),
-        ["weak_training_pool_*.csv", "home_repair_training_weak_*.csv"],
+        [
+            "weak_training_pool_*.csv",
+            "diy_repair_training_weak_*.csv",
+            "home_repair_training_weak_*.csv",
+        ],
     )
     rows = read_training_rows(input_path)
     texts = [row["text"] for row in rows]
@@ -219,7 +223,7 @@ def main() -> None:
     model_path.parent.mkdir(parents=True, exist_ok=True)
 
     report_lines = [
-        "Home-Repair Risk Classification Model Report",
+        "DIY Repair Risk Classification Model Report",
         "",
         f"Training file: {input_path}",
         f"Rows used: {len(rows)}",
