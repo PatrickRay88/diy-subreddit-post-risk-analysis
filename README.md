@@ -79,6 +79,25 @@ noisy labels, not expert ground truth.
 
 See `PROJECT_STATUS.md` for the current project framing.
 
+## Manual Review Split
+
+For the larger final workflow, hold out a human-reviewed evaluation set:
+
+```powershell
+python create_manual_review_split.py --review-size 300 --reviewers Patrick Sarah Max Manthan
+```
+
+This creates:
+
+- `data/manual_review/manual_review_set_*.csv`: shared review file
+- `data/manual_review/manual_review_reviewer_*.csv`: one file per reviewer
+- `data/training/weak_training_pool_*.csv`: weak-labeled training rows with manual-review rows removed
+- `data/splits/weak_manual_split_summary_*.json`: split counts
+
+Each manual-review row includes `assigned_reviewer_number` and
+`assigned_reviewer`. Reviewers should fill in `human_label`,
+`human_confidence`, `audit_agrees`, `human_review_notes`, and `reviewed_at`.
+
 ## Train Models
 
 After weak labeling, train the classical ML baselines:
@@ -89,6 +108,15 @@ python train_models.py
 
 This uses only the post `text` column and the high-confidence weak labels. It
 writes a report to `reports/` and saves the best pipeline to `models/`.
+
+After the team completes the manual review file, evaluate against human labels:
+
+```powershell
+python evaluate_human_review.py --manual-review data\manual_review\manual_review_set_YOUR_TIMESTAMP.csv
+```
+
+See `TEAM_REVIEW_INSTRUCTIONS.md` for reviewer assignments and label-entry
+rules.
 
 ## Columns
 

@@ -73,3 +73,26 @@ expert ground truth. Open the CSV in `data/audit` and fill in:
 Report this audit result separately from model accuracy. Model accuracy from
 `train_models.py` is accuracy against weak labels, not proof that the model is
 right about real-world safety.
+
+## Manual Review Team Workflow
+
+For the final split, open `data/manual_review/manual_review_set_*.csv` or the
+individual reviewer file assigned to you.
+
+Reviewer assignments:
+
+- `1`: Patrick
+- `2`: Sarah
+- `3`: Max
+- `4`: Manthan
+
+Fill in these columns:
+
+- `human_label`: your final manual label
+- `human_confidence`: `low`, `medium`, or `high`
+- `audit_agrees`: `yes` if your `human_label` matches `auto_label`, otherwise `no`
+- `human_review_notes`: short reason for hard cases or disagreements
+- `reviewed_at`: review date, such as `2026-06-04`
+
+The manual-review rows are held out of the weak-label training pool. That means
+they can be used later for a less circular final evaluation.

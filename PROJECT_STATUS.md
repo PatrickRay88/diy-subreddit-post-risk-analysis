@@ -78,9 +78,10 @@ The final writeup should include:
 1. Keep raw scraped data in `data/raw`.
 2. Keep manual-labeling files in `data/labeling`.
 3. Run weak supervision with `python auto_label_dataset.py`.
-4. Train models on `data/training`.
-5. Manually review the audit sample in `data/audit`.
-6. Report audit accuracy separately from training accuracy.
+4. Create a held-out manual-review split with `python create_manual_review_split.py`.
+5. Train models on the weak-label training pool in `data/training`.
+6. Manually label the held-out rows in `data/manual_review`.
+7. Evaluate weak labels and model predictions against `human_label`.
 
 ## Current Generated Outputs
 
@@ -111,3 +112,34 @@ The latest model report is:
 The best current model is Logistic Regression with macro-F1 `0.775` on a
 weak-label test split. This number should be described as weak-label agreement,
 not true expert accuracy.
+
+## Planned Larger Dataset Workflow
+
+The final workflow now uses a larger raw dataset of 2,000 posts. The full set is
+weak-labeled, then a stratified 300-row manual-review set is held out and
+assigned across the team:
+
+- `1`: Patrick
+- `2`: Sarah
+- `3`: Max
+- `4`: Manthan
+
+The remaining high-confidence weak-labeled rows become the training pool. The
+held-out manually reviewed rows become the final evaluation set.
+
+Current 2,000-post files:
+
+- Raw data: `data/raw/reddit_home_repair_posts_20260604_172614.csv`
+- Labeling copy: `data/labeling/home_repair_labeling_20260604_172614.csv`
+- Weak-labeled full data: `data/weak_labels/home_repair_weak_labeled_20260604_172800.csv`
+- Manual review set: `data/manual_review/manual_review_set_20260604_172815.csv`
+- Weak training pool: `data/training/weak_training_pool_20260604_172815.csv`
+- Split summary: `data/splits/weak_manual_split_summary_20260604_172815.json`
+- Latest model report: `reports/model_report_20260604_172833.txt`
+
+Current split:
+
+- 300 manual-review rows
+- 75 rows assigned to each reviewer
+- 75 rows from each review bucket: low, medium, urgent, and needs-review
+- 1,348 high-confidence weak-labeled training rows after removing the manual-review holdout

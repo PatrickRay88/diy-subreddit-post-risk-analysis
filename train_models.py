@@ -34,14 +34,19 @@ LABELS = [
 ]
 
 
-def newest_csv(directory: Path, pattern: str) -> Path:
+def newest_csv(directory: Path, patterns: list[str]) -> Path:
     files = sorted(
-        directory.glob(pattern),
+        [
+            path
+            for pattern in patterns
+            for path in directory.glob(pattern)
+        ],
         key=lambda path: path.stat().st_mtime,
         reverse=True,
     )
     if not files:
-        raise FileNotFoundError(f"No files matching {pattern!r} found in {directory}")
+        joined = ", ".join(repr(pattern) for pattern in patterns)
+        raise FileNotFoundError(f"No files matching {joined} found in {directory}")
     return files[0]
 
 
@@ -164,7 +169,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     input_path = args.input or newest_csv(
-        Path("data/training"), "home_repair_training_weak_*.csv"
+        Path("data/training"),
+        ["weak_training_pool_*.csv", "home_repair_training_weak_*.csv"],
     )
     rows = read_training_rows(input_path)
     texts = [row["text"] for row in rows]
