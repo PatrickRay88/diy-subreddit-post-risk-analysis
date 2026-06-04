@@ -1,145 +1,207 @@
-# Project Status And Weak-Supervision Plan
+# Project Status And Workflow
 
-## Where We Are
+## Current Project Summary
 
-This project started as a supervised text-classification dataset for Reddit
-home-repair posts. The goal is to classify the safety or urgency level of an
-original post using only the title and body text, not comments.
+This project classifies Reddit home-repair posts into practical risk levels
+using the original post text.
 
-The current workspace now contains:
+Current research question:
 
-- A Reddit scraper that uses official Reddit API credentials from `.env`
-- A balanced raw scrape of 750 original posts
-- A manual-labeling CSV with blank label fields
-- A labeling guide with three core classes
+> Can classical machine learning models classify Reddit home-repair posts into
+> low, medium, and urgent risk categories using only the original post text,
+> when trained on weakly supervised labels and evaluated with human-reviewed
+> examples?
 
-The latest balanced scrape is:
+The model is not intended to be a safety tool. It is an exploratory machine
+learning class project about text classification, weak supervision, and model
+evaluation.
 
-`data/raw/reddit_home_repair_posts_20260529_184424.csv`
+## Current Dataset
 
-The manual-labeling working file is:
+The current main dataset contains 2,000 Reddit posts.
 
-`data/labeling/home_repair_labeling_20260529_184535.csv`
-
-## The Labeling Problem
-
-Manually labeling every post is probably more effort than this project needs.
-However, fully automated labels can create a different problem: if the labels
-come from simple keyword rules and the model is trained on those labels, the
-model may only learn to reproduce the same keyword rules.
-
-That would make the project less interesting because the trained model would be
-redundant with the label generator.
-
-## Better Approach
-
-The better compromise is weak supervision.
-
-Instead of treating automatic labels as perfect truth, the project uses several
-imperfect labeling functions. Each function looks for a type of repair signal,
-such as gas risk, electrical danger, active flooding, contained leaks, trade
-system issues, mold/foundation concerns, or cosmetic fixes.
-
-The weak labeler then:
-
-- Assigns an `auto_label`
-- Gives an `auto_label_confidence`
-- Records an `auto_label_reason`
-- Fills the training `label` only for high-confidence rows
-- Marks uncertain or conflicting rows as `needs_human_review`
-- Creates a smaller audit sample for human checking
-
-This means the automatic labels are a noisy teacher, not the final scientific
-claim. The machine-learning model can still be evaluated by checking whether it
-generalizes beyond the exact trigger phrases used by the weak labeler.
-
-## How This Avoids Being Redundant
-
-The project should not claim that the weak labeler is the final model. Instead,
-the project claim should be:
-
-> This project explores whether weakly supervised labels can bootstrap a
-> practical training dataset for classifying home-repair risk in Reddit posts,
-> and whether classical ML models can generalize from those noisy labels to
-> broader language patterns.
-
-The final writeup should include:
-
-- A description of the weak-labeling functions
-- The number of rows weak-labeled versus held for review
-- A class distribution table
-- A small manually checked audit sample
-- Model comparisons using TF-IDF plus classical ML models
-- A limitation section explaining that weak labels are noisy and not expert
-  safety judgments
-
-## Recommended Final Dataset Flow
-
-1. Keep raw scraped data in `data/raw`.
-2. Keep manual-labeling files in `data/labeling`.
-3. Run weak supervision with `python auto_label_dataset.py`.
-4. Create a held-out manual-review split with `python create_manual_review_split.py`.
-5. Train models on the weak-label training pool in `data/training`.
-6. Manually label the held-out rows in `data/manual_review`.
-7. Evaluate weak labels and model predictions against `human_label`.
-
-## Current Generated Outputs
-
-The latest weak-supervision run produced:
-
-- 750 rows with weak-label metadata
-- 602 high-confidence weak-labeled training rows
-- 120 rows in the human audit sample
-
-Training-label distribution:
-
-- `low_risk_diy`: 153
-- `medium_risk_call_pro`: 309
-- `urgent_safety_risk`: 140
-
-The latest weak-label files are:
-
-`data/weak_labels/home_repair_weak_labeled_20260529_185646.csv`
-
-`data/training/home_repair_training_weak_20260529_185646.csv`
-
-`data/audit/home_repair_audit_sample_20260529_185646.csv`
-
-The latest model report is:
-
-`reports/model_report_20260529_185652.txt`
-
-The best current model is Logistic Regression with macro-F1 `0.775` on a
-weak-label test split. This number should be described as weak-label agreement,
-not true expert accuracy.
-
-## Planned Larger Dataset Workflow
-
-The final workflow now uses a larger raw dataset of 2,000 posts. The full set is
-weak-labeled, then a stratified 300-row manual-review set is held out and
-assigned across the team:
-
-- `1`: Patrick
-- `2`: Sarah
-- `3`: Max
-- `4`: Manthan
-
-The remaining high-confidence weak-labeled rows become the training pool. The
-held-out manually reviewed rows become the final evaluation set.
-
-Current 2,000-post files:
+Files:
 
 - Raw data: `data/raw/reddit_home_repair_posts_20260604_172614.csv`
 - Labeling copy: `data/labeling/home_repair_labeling_20260604_172614.csv`
-- Weak-labeled full data: `data/weak_labels/home_repair_weak_labeled_20260604_172800.csv`
+- Full weak-labeled data: `data/weak_labels/home_repair_weak_labeled_20260604_172800.csv`
 - Manual review set: `data/manual_review/manual_review_set_20260604_172815.csv`
 - Weak training pool: `data/training/weak_training_pool_20260604_172815.csv`
 - Split summary: `data/splits/weak_manual_split_summary_20260604_172815.json`
 - Latest model report: `reports/model_report_20260604_172833.txt`
 
-Current split:
+## Labels
 
-- 300 manual-review rows
-- 75 rows assigned to each reviewer
-- 75 rows from each review bucket: low, medium, urgent, and needs-review
-- 1,348 high-confidence weak-labeled training rows after removing the manual-review holdout
+The three model classes are:
+
+- `low_risk_diy`
+- `medium_risk_call_pro`
+- `urgent_safety_risk`
+
+The manual review process also allows:
+
+- `exclude_unclear`
+
+`exclude_unclear` is not a training class. It is used for rows that should not
+be evaluated as a real home-repair risk example.
+
+## What We Built
+
+### 1. Reddit Scraper
+
+`reddit_scraper.py` collects original Reddit post text using Reddit API
+credentials stored in a local `.env` file. The `.env` file is ignored by Git.
+
+The scraper saves:
+
+- title
+- selftext
+- combined text
+- subreddit
+- permalink
+- timestamp
+- score and comment count
+- source query
+
+Comments are not scraped because the model should not learn from advice given
+after the original post.
+
+### 2. Weak Labeler
+
+`auto_label_dataset.py` applies rule-based weak supervision. It searches for
+risk signals such as:
+
+- gas smell, carbon monoxide, smoke, sparks
+- flooding, sewage backup, collapse
+- leaks, mold, plumbing, HVAC, wiring
+- paint, trim, caulk, drywall patch
+
+The weak labeler writes:
+
+- `auto_label`
+- `auto_label_scores`
+- `auto_label_confidence`
+- `auto_label_reason`
+- `needs_human_review`
+
+The weak labeler does not use TF-IDF. It uses hand-written rules and evidence
+scores.
+
+### 3. Manual Review Split
+
+`create_manual_review_split.py` created a 300-row held-out manual-review set.
+
+The split is balanced:
+
+- 75 low-risk weak-label rows
+- 75 medium-risk weak-label rows
+- 75 urgent-risk weak-label rows
+- 75 rows flagged as needing human review
+
+Reviewer assignment:
+
+- Patrick: 75 rows
+- Sarah: 75 rows
+- Max: 75 rows
+- Manthan: 75 rows
+
+The manual-review rows are removed from the weak-label training pool.
+
+### 4. Weak Training Pool
+
+After removing the manual-review holdout, the weak-label training pool contains
+1,348 high-confidence rows.
+
+Training label distribution:
+
+- `low_risk_diy`: 301
+- `medium_risk_call_pro`: 674
+- `urgent_safety_risk`: 373
+
+### 5. Model Training
+
+`train_models.py` trains classical machine learning models using TF-IDF
+features.
+
+The models currently include:
+
+- Logistic Regression
+- Naive Bayes
+- Linear SVM
+- Decision Tree
+- Random Forest
+
+Important distinction:
+
+- weak labeler creates rough labels with rules
+- TF-IDF creates numeric text features for ML models
+- ML models learn from text features and training labels
+
+## Current Model Results
+
+The latest model report is:
+
+`reports/model_report_20260604_172833.txt`
+
+Current best model on a weak-label test split:
+
+- Random Forest
+- Accuracy: `0.872`
+- Macro-F1: `0.875`
+
+These results are not final human-validated accuracy. They measure agreement
+with weak labels. Final evaluation should happen after the manual review file is
+completed.
+
+## Why We Need Manual Review
+
+If we only train and test on weak labels, the model may simply learn to imitate
+the weak labeler. That would be circular.
+
+The current design avoids that by using:
+
+- weak labels for training
+- human-reviewed labels for final evaluation
+
+After the team completes the manual review file, we can compare:
+
+- `auto_label` vs. `human_label`
+- model prediction vs. `human_label`
+
+That gives both weak-label quality and model performance against human review.
+
+## Current Task For The Team
+
+Each teammate should review their assigned 75 rows and fill in:
+
+- `human_label`
+- `human_confidence`
+- `audit_agrees`
+- `human_review_notes`
+- `reviewed_at`
+
+Main guide:
+
+`LABELING_GUIDE.md`
+
+Quick team instructions:
+
+`TEAM_REVIEW_INSTRUCTIONS.md`
+
+## Next Steps
+
+1. Complete the 300-row manual review.
+2. Combine reviewer files if needed, or update the shared manual-review file.
+3. Run `evaluate_human_review.py` against the completed manual review file.
+4. Report weak-label agreement with humans.
+5. Report model performance against human labels.
+6. Add error analysis examples to the final writeup.
+7. Discuss limitations clearly.
+
+## Suggested Final Claim
+
+This project uses weak supervision to bootstrap a larger training dataset from
+Reddit home-repair posts, then uses a separate human-reviewed set to evaluate
+whether classical text models can approximate practical repair-risk categories.
+The model is exploratory and should not be treated as a professional safety
+decision system.

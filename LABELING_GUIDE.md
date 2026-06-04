@@ -1,98 +1,224 @@
 # Home-Repair Reddit Risk Labeling Guide
 
-Use the original post title and body only. Do not use comments, scores, author
-history, or subreddit reputation when deciding the label.
+This guide is for the human-review part of the project. Use it when filling in
+the manual review CSV files in `data/manual_review/`.
 
-## Labels
+## Goal
+
+Each Reddit post should be assigned one human judgment about the repair risk
+described in the original post.
+
+Use only:
+
+- `title`
+- `selftext`
+- `text`
+
+Do not use:
+
+- Reddit comments
+- score or comment count
+- author history
+- subreddit reputation
+- advice given by other users
+
+The model is supposed to classify the original homeowner's description, not the
+quality of later discussion.
+
+## Valid Human Labels
+
+Use exactly one value in the `human_label` column:
+
+- `low_risk_diy`
+- `medium_risk_call_pro`
+- `urgent_safety_risk`
+- `exclude_unclear`
+
+## Label Definitions
 
 ### `low_risk_diy`
 
-Use when the post sounds cosmetic, minor, or routine and does not suggest active
-damage or a safety hazard.
+Use this when the post sounds cosmetic, minor, routine, or safe for a homeowner
+to research and handle without immediate professional help.
 
 Common signals:
-- Painting, staining, caulking, trim, small drywall patches
-- Loose hardware, small cosmetic cracks, squeaks
-- Questions about tools, materials, or finish quality
+
+- Painting, staining, peeling paint
+- Caulk, grout, trim, baseboards
+- Small drywall patches or nail holes
+- Loose knobs, cabinet hinges, squeaky doors
+- Cosmetic cracks or finish-quality questions
+- Tool, material, or technique questions with no safety concern
+
+Examples:
+
+- "What caulk should I use around this bathroom counter?"
+- "How do I repaint peeling trim?"
+- "Can I patch this small drywall hole myself?"
 
 ### `medium_risk_call_pro`
 
-Use when the post may need a licensed trade, inspection, or timely repair, but
-does not sound like immediate danger.
+Use this when the post may need a professional, inspection, or timely repair,
+but does not sound like an immediate emergency.
 
 Common signals:
-- Plumbing leaks that are contained or slow
-- HVAC, furnace, water heater, roofing, breaker, outlet, or wiring issues
-- Mold, foundation concerns, pests, recurring water intrusion
-- Unclear problems where the homeowner may make things worse by guessing
+
+- Slow or contained plumbing leaks
+- Water damage, roof leaks, basement water intrusion
+- Mold or recurring moisture
+- HVAC, furnace, AC, water heater problems
+- Breaker, outlet, wiring, plumbing, sewer, or septic concerns without urgent danger signs
+- Foundation cracks or structural concerns that are not described as actively failing
+- Unclear repair situations where DIY guessing could make the problem worse
+
+Examples:
+
+- "Slow leak under sink has damaged the cabinet floor."
+- "Mold found near basement window after rain."
+- "Breaker keeps tripping, but no smoke or burning smell."
 
 ### `urgent_safety_risk`
 
-Use when the post suggests immediate danger, major active damage, or a condition
-where delaying could cause injury or serious property loss.
+Use this when the post suggests possible immediate danger, major active damage,
+or a condition where delaying could cause injury or serious property loss.
 
 Common signals:
-- Gas smell, carbon monoxide alarm, smoke, burning smell, sparks
-- Active flooding, sewage backup, ceiling collapse, fire hazard
-- Structural movement, large cracks, sagging, load-bearing concerns
-- Exposed live wires, repeated breaker trips with heat/smell/sparking
 
-## Suggested Workflow
+- Gas smell, propane smell, carbon monoxide alarm
+- Smoke, sparks, burning smell, melted outlet, hot outlet
+- Active flooding, water pouring or gushing, sewage backup
+- Ceiling collapse, sagging ceiling, bowing wall, floor sagging
+- Exposed live wires or repeated breaker trips with heat, smoke, smell, or sparks
+- Structural movement or load-bearing concerns with visible failure
 
-1. Keep the original scrape in `data/raw` as the audit copy.
-2. Run `python prepare_labeling_dataset.py` to create a working file in `data/labeling`.
-3. Label each post manually in the `label` column.
-4. Set `label_status` to `labeled`, `needs_second_review`, or `excluded`.
-5. Use `review_hint` only as a sorting aid, not as the final answer.
-6. If a post fits more than one class, choose the highest realistic risk.
-7. If there is not enough information, label conservatively as `medium_risk_call_pro`.
-8. Use `label_notes` for difficult calls, short rationale, or exclusion reasons.
+Examples:
 
-Use `exclude_unclear` only for rows that should not be used for model training,
-such as deleted posts, pure image posts, jokes, unrelated posts, or posts where
-the title/body does not contain enough context.
+- "Gas smell near furnace."
+- "Outlet sparked and smells burnt."
+- "Water is pouring through the ceiling."
 
-## Quality Checks
+### `exclude_unclear`
 
-- Label at least 50 posts twice, a few days apart, and compare your consistency.
-- If possible, have another person label 50 to 100 posts and compare agreement.
-- Keep the classes reasonably balanced. A useful target is 200 to 300 examples
-  per class for a 600 to 900 post dataset.
-- Remove duplicates, deleted posts, pure photos with no description, and posts
-  where the body depends on comments for context.
+Use this only when the row should not be used as a human evaluation example.
 
-## Weak-Supervision Audit
+Common reasons:
 
-If you use `python auto_label_dataset.py`, do not treat the generated labels as
-expert ground truth. Open the CSV in `data/audit` and fill in:
+- Deleted or removed text
+- Pure image post with no meaningful description
+- Joke, rant, update, or unrelated post
+- Not really home repair
+- Too little context to infer risk
+- The important information appears to depend on comments or missing photos
 
-- `human_label`: your manual judgment
-- `audit_agrees`: `yes` or `no`
-- `human_review_notes`: short explanation for disagreements
+Do not use `exclude_unclear` just because the case is hard. If it is a real
+home-repair situation but uncertain, choose the best risk label and set
+`human_confidence` to `low`.
 
-Report this audit result separately from model accuracy. Model accuracy from
-`train_models.py` is accuracy against weak labels, not proof that the model is
-right about real-world safety.
+## Tie-Breaking Rules
 
-## Manual Review Team Workflow
+When a post fits more than one class, choose the highest realistic risk that is
+supported by the text.
 
-For the final split, open `data/manual_review/manual_review_set_*.csv` or the
-individual reviewer file assigned to you.
+Examples:
 
-Reviewer assignments:
+- "Shower leaking into basement after re-caulking" should usually be
+  `medium_risk_call_pro`, not `low_risk_diy`, because the leak matters more
+  than the caulking detail.
+- "Painting near an outlet that sparked" should usually be
+  `urgent_safety_risk`, because the spark matters more than the painting.
+- "Small cosmetic crack in drywall" should usually be `low_risk_diy` unless the
+  post describes structural movement, sagging, or foundation issues.
 
-- `1`: Patrick
-- `2`: Sarah
-- `3`: Max
-- `4`: Manthan
+If the risk is unclear but real, use `medium_risk_call_pro` as the conservative
+middle label.
 
-Fill in these columns:
+## Manual Review Columns
 
-- `human_label`: your final manual label
-- `human_confidence`: `low`, `medium`, or `high`
-- `audit_agrees`: `yes` if your `human_label` matches `auto_label`, otherwise `no`
-- `human_review_notes`: short reason for hard cases or disagreements
-- `reviewed_at`: review date, such as `2026-06-04`
+Fill in these columns only:
 
-The manual-review rows are held out of the weak-label training pool. That means
-they can be used later for a less circular final evaluation.
+- `human_label`
+- `human_confidence`
+- `audit_agrees`
+- `human_review_notes`
+- `reviewed_at`
+
+Do not edit:
+
+- `auto_label`
+- `auto_label_scores`
+- `auto_label_confidence`
+- `auto_label_reason`
+- `needs_human_review`
+- `label`
+- `label_source`
+
+Those columns are generated by the weak labeler and are used later for
+comparison.
+
+## Human Confidence
+
+Use one of:
+
+- `high`: the label is clear from the post
+- `medium`: the label is reasonable, but there is some ambiguity
+- `low`: the post is real but difficult to classify
+
+Use `low` instead of `exclude_unclear` when there is enough information to make
+a cautious judgment.
+
+## Audit Agreement
+
+`audit_agrees` compares your human label to the weak labeler's `auto_label`.
+
+Use:
+
+- `yes`: your `human_label` matches `auto_label`
+- `no`: your `human_label` does not match `auto_label`
+
+If `auto_label` is blank and you assign a real human label, use `no`.
+
+## Notes
+
+Use `human_review_notes` for short explanations, especially when:
+
+- `audit_agrees = no`
+- `human_confidence = low`
+- you choose `exclude_unclear`
+- the post contains mixed risk signals
+
+Good note examples:
+
+- "Leak is contained, no urgent flooding described."
+- "Mentions sparks and burning smell, marking urgent."
+- "Photo-only post; text does not describe the issue."
+
+## Current Reviewer Assignments
+
+The current manual-review set has 300 rows.
+
+- `1`: Patrick, 75 rows
+- `2`: Sarah, 75 rows
+- `3`: Max, 75 rows
+- `4`: Manthan, 75 rows
+
+The shared file is:
+
+`data/manual_review/manual_review_set_20260604_172815.csv`
+
+Individual reviewer files are in:
+
+`data/manual_review/`
+
+## Why This Matters
+
+The weak labeler created rough labels for a large dataset, but those labels are
+not ground truth. The 300 manually reviewed rows are held out from training and
+will be used for the final, less circular evaluation.
+
+Final evaluation will compare:
+
+- weak labeler vs. `human_label`
+- trained ML model vs. `human_label`
+
+This is what makes the project more credible than simply training a model to
+imitate keyword rules.

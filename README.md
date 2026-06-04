@@ -1,21 +1,74 @@
-# Home-Repair Reddit Risk Dataset Scraper
+# Home-Repair Reddit Post Risk Analysis
 
-This project collects original Reddit post text for a machine-learning dataset
-that classifies home-repair posts into:
+This project builds a text-classification pipeline for Reddit home-repair posts.
+The goal is to classify original post text into practical repair-risk levels:
 
 - `low_risk_diy`
 - `medium_risk_call_pro`
 - `urgent_safety_risk`
 
-The scraper stores only the post title/body and metadata useful for auditing.
-It does not collect comments, so a model cannot learn from advice given by
-Reddit commenters.
+The final workflow uses weak supervision for scale and human review for a less
+circular evaluation.
 
-## Run
+## Current Status
 
-Reddit often blocks unauthenticated scraping. Create a Reddit app at
-`https://www.reddit.com/prefs/apps`, choose `script`, and put the credentials in
-a local `.env` file:
+Current main dataset:
+
+- 2,000 scraped Reddit posts
+- 2,000 weak-labeled rows
+- 300 held-out manual-review rows
+- 1,348 high-confidence weak-labeled training rows after removing the holdout
+
+Current reviewer assignments:
+
+- Patrick: 75 rows
+- Sarah: 75 rows
+- Max: 75 rows
+- Manthan: 75 rows
+
+Start here:
+
+- `PROJECT_STATUS.md`: current project summary
+- `LABELING_GUIDE.md`: detailed label rules
+- `TEAM_REVIEW_INSTRUCTIONS.md`: short teammate instructions
+
+## Key Files
+
+- Raw data: `data/raw/reddit_home_repair_posts_20260604_172614.csv`
+- Full weak-labeled data: `data/weak_labels/home_repair_weak_labeled_20260604_172800.csv`
+- Manual review set: `data/manual_review/manual_review_set_20260604_172815.csv`
+- Weak training pool: `data/training/weak_training_pool_20260604_172815.csv`
+- Latest model report: `reports/model_report_20260604_172833.txt`
+- Project summary doc: `docs/Home_Repair_Risk_Project_Summary_20260604.docx`
+
+## Method Overview
+
+The project has two labeling/evaluation layers.
+
+First, `auto_label_dataset.py` creates weak labels using hand-written rules.
+These rules look for phrases associated with gas, sparks, flooding, leaks,
+mold, wiring, HVAC, plumbing, paint, caulk, trim, and similar repair signals.
+
+Second, the team manually reviews a held-out 300-row sample. Those rows are not
+used for weak-label training. They will be used for final evaluation.
+
+This avoids the main circularity problem:
+
+- weak labels are used for training
+- human labels are used for final evaluation
+
+## Setup
+
+Install dependencies:
+
+```powershell
+pip install -r requirements.txt
+```
+
+Reddit scraping uses API credentials from `.env`. The `.env` file is ignored by
+Git and should not be committed.
+
+Example `.env` format:
 
 ```powershell
 REDDIT_CLIENT_ID=your_client_id
@@ -27,109 +80,101 @@ REDDIT_USERNAME=your_username
 REDDIT_PASSWORD=your_password
 ```
 
-Then run:
+## Recreate The Current Pipeline
+
+Scrape posts:
 
 ```powershell
-python reddit_scraper.py --max-posts 750
+python reddit_scraper.py --max-posts 2000 --max-posts-per-subreddit 400 --max-posts-per-query 200 --pages-per-query 4 --delay 1
 ```
 
-Outputs are written to `data/raw/` as both JSONL and CSV.
-
-Useful options:
+Prepare a labeling copy:
 
 ```powershell
-python reddit_scraper.py --max-posts 1000 --pages-per-query 3 --delay 3
-python reddit_scraper.py --max-posts 750 --max-posts-per-subreddit 150
-python reddit_scraper.py --max-posts 750 --max-posts-per-query 75
-python reddit_scraper.py --subreddits HomeImprovement Plumbing askanelectrician
-python reddit_scraper.py --queries "gas smell" "sparking outlet" "paint peeling"
+python prepare_labeling_dataset.py --input data\raw\reddit_home_repair_posts_20260604_172614.csv --output data\labeling\home_repair_labeling_20260604_172614.csv
 ```
 
-## Prepare For Labeling
-
-After scraping, create a separate manual-labeling file:
+Weak-label the full dataset:
 
 ```powershell
-python prepare_labeling_dataset.py
+python auto_label_dataset.py --input data\labeling\home_repair_labeling_20260604_172614.csv --audit-size 0
 ```
 
-This writes a CSV to `data/labeling/`. Fill in:
-
-- `label`: `low_risk_diy`, `medium_risk_call_pro`, `urgent_safety_risk`, or `exclude_unclear`
-- `label_status`: `labeled`, `needs_second_review`, or `excluded`
-- `label_notes`: optional short rationale
-
-## Weak Supervision
-
-If fully manual labeling is too time-consuming, generate weak labels:
+Create the held-out manual-review split:
 
 ```powershell
-python auto_label_dataset.py
+python create_manual_review_split.py --input data\weak_labels\home_repair_weak_labeled_20260604_172800.csv --review-size 300 --reviewers Patrick Sarah Max Manthan --seed 42
 ```
 
-This creates:
-
-- `data/weak_labels/`: all rows with auto-label metadata
-- `data/training/`: high-confidence weak-labeled rows for model training
-- `data/audit/`: a smaller sample to manually check
-
-The weak labeler adds `auto_label`, `auto_label_confidence`,
-`auto_label_reason`, `needs_human_review`, and `label_source`. Treat these as
-noisy labels, not expert ground truth.
-
-See `PROJECT_STATUS.md` for the current project framing.
-
-## Manual Review Split
-
-For the larger final workflow, hold out a human-reviewed evaluation set:
+Train baseline models on the weak-label training pool:
 
 ```powershell
-python create_manual_review_split.py --review-size 300 --reviewers Patrick Sarah Max Manthan
+python train_models.py --input data\training\weak_training_pool_20260604_172815.csv
 ```
 
-This creates:
-
-- `data/manual_review/manual_review_set_*.csv`: shared review file
-- `data/manual_review/manual_review_reviewer_*.csv`: one file per reviewer
-- `data/training/weak_training_pool_*.csv`: weak-labeled training rows with manual-review rows removed
-- `data/splits/weak_manual_split_summary_*.json`: split counts
-
-Each manual-review row includes `assigned_reviewer_number` and
-`assigned_reviewer`. Reviewers should fill in `human_label`,
-`human_confidence`, `audit_agrees`, `human_review_notes`, and `reviewed_at`.
-
-## Train Models
-
-After weak labeling, train the classical ML baselines:
+After human review is complete, evaluate against human labels:
 
 ```powershell
-python train_models.py
+python evaluate_human_review.py --manual-review data\manual_review\manual_review_set_20260604_172815.csv
 ```
 
-This uses only the post `text` column and the high-confidence weak labels. It
-writes a report to `reports/` and saves the best pipeline to `models/`.
+## Manual Review
 
-After the team completes the manual review file, evaluate against human labels:
+Reviewers should fill in only:
 
-```powershell
-python evaluate_human_review.py --manual-review data\manual_review\manual_review_set_YOUR_TIMESTAMP.csv
-```
+- `human_label`
+- `human_confidence`
+- `audit_agrees`
+- `human_review_notes`
+- `reviewed_at`
 
-See `TEAM_REVIEW_INSTRUCTIONS.md` for reviewer assignments and label-entry
-rules.
+Do not edit:
 
-## Columns
+- `auto_label`
+- `auto_label_scores`
+- `auto_label_confidence`
+- `auto_label_reason`
+- `needs_human_review`
 
-- `reddit_id`: Reddit post ID for deduplication
-- `subreddit`: source community
-- `created_utc`: post creation time in UTC
-- `title`: original post title
-- `selftext`: original post body
-- `text`: title and body joined for ML features
-- `permalink`: Reddit link for audit checks
-- `score`, `num_comments`, `url`: metadata
-- `source_query`: search phrase that found the post
-- `review_hint`: weak keyword hint for manual review
-- `label`: blank column for manual labels
+Valid `human_label` values:
 
-See `LABELING_GUIDE.md` for the recommended manual labeling rules.
+- `low_risk_diy`
+- `medium_risk_call_pro`
+- `urgent_safety_risk`
+- `exclude_unclear`
+
+See `LABELING_GUIDE.md` for the decision rules.
+
+## Model Training
+
+`train_models.py` uses TF-IDF to convert post text into numeric features. It
+then trains:
+
+- Logistic Regression
+- Naive Bayes
+- Linear SVM
+- Decision Tree
+- Random Forest
+
+The saved model pipeline includes both the TF-IDF vectorizer and the trained
+model.
+
+Current best weak-label test result:
+
+- Random Forest
+- Accuracy: `0.872`
+- Macro-F1: `0.875`
+
+These metrics are weak-label agreement, not final human-validated accuracy.
+
+## Evaluation Plan
+
+After the team completes the manual review:
+
+1. Compare `auto_label` to `human_label`.
+2. Compare trained model predictions to `human_label`.
+3. Report accuracy, macro-F1, per-class precision/recall/F1, and confusion matrix.
+4. Inspect errors, especially urgent posts predicted as medium or low.
+
+The final writeup should clearly state that the classifier is exploratory and
+not a professional safety tool.
