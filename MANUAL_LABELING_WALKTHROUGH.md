@@ -1,41 +1,88 @@
 # Manual Labeling Walkthrough
 
-Use this walkthrough when filling in your reviewer CSV in
-`data/manual_review/`.
+This is the single guide for the team manual-review task. Use it when filling
+in the reviewer CSV files in `data/manual_review/`.
 
-The manual-review files contain both generated columns and blank human-review
-columns. The generated columns are there to help us audit the weak labeler.
-They are not the final answer.
+The manual-review files contain generated weak-label columns and blank
+human-review columns. The generated columns are there so we can audit the weak
+labeler later. They are not the final answer.
 
-## 1. Open Your Reviewer File
+## Goal
 
-Use your assigned file:
+Each Reddit post should receive one human judgment about the practical repair
+risk described in the original post.
+
+Use only:
+
+- `title`
+- `selftext`
+- `text`
+
+Do not use:
+
+- Reddit comments
+- score or comment count
+- author history
+- subreddit reputation
+- advice given by other users
+
+The model will only see the original post text, so the human labels should use
+the same evidence.
+
+## Files To Use
+
+Shared manual-review file:
+
+`data/manual_review/manual_review_set_20260604_181427.csv`
+
+Individual reviewer files:
 
 - Patrick: `data/manual_review/manual_review_reviewer_1_Patrick_20260604_181427.csv`
 - Sarah: `data/manual_review/manual_review_reviewer_2_Sarah_20260604_181427.csv`
 - Max: `data/manual_review/manual_review_reviewer_3_Max_20260604_181427.csv`
 - Manthan: `data/manual_review/manual_review_reviewer_4_Manthan_20260604_181427.csv`
 
-Each file has 100 rows.
+Each reviewer has 100 rows. The full manual-review set has 400 rows.
 
-## 2. Read The Original Post Text
+Reviewer numbers:
 
-For each row, read:
+- `1`: Patrick
+- `2`: Sarah
+- `3`: Max
+- `4`: Manthan
 
-- `title`
-- `selftext`
-- `text`
+If using the shared file, filter by `assigned_reviewer_number` or
+`assigned_reviewer`.
 
-The `text` column usually combines the title and body, so it is often the
-easiest column to read.
+## Columns To Fill In
 
-Do not use Reddit comments, upvotes, author history, or outside assumptions.
-The model will only see the original post text, so our human labels should use
-the same evidence.
+Fill in only these columns:
 
-## 3. Understand The Generated Columns
+- `human_label`
+- `human_confidence`
+- `audit_agrees`
+- `human_review_notes`
+- `reviewed_at`
 
-You will see columns that look like labels, but they are generated context:
+Do not edit generated columns such as:
+
+- `review_hint`
+- `review_bucket`
+- `label`
+- `label_status`
+- `label_source`
+- `auto_label`
+- `auto_label_confidence`
+- `auto_label_reason`
+- `auto_label_scores`
+- `needs_human_review`
+- `manual_review_id`
+- `assigned_reviewer_number`
+- `assigned_reviewer`
+
+## Generated Columns Explained
+
+Some columns look like labels, but they are only context:
 
 - `review_hint`: an older rough hint from the labeling-prep step.
 - `review_bucket`: the bucket used to balance the manual sample.
@@ -45,74 +92,113 @@ You will see columns that look like labels, but they are generated context:
 - `auto_label_scores`: numeric rule scores for each possible class.
 - `needs_human_review`: whether the weak labeler thought the row was uncertain.
 
-Do not edit those columns.
-
 Important: `needs_review_unclear` in `review_hint` does not mean the row must be
-excluded. It only means the early rough hint could not confidently classify the
+excluded. It only means an early rough hint could not confidently classify the
 post. If the post text is clear, still choose the best human risk label.
 
 Also, `needs_human_review = no` does not mean you can skip the row. It only
 means the weak labeler thought it had enough signal. Every row in your reviewer
 file still needs a human label.
 
-## 4. Choose One Human Label
+## Valid Human Labels
 
-Fill in `human_label` with exactly one of these:
+Use exactly one value in `human_label`:
 
 - `low_risk_diy`
 - `medium_risk_call_pro`
 - `urgent_safety_risk`
 - `exclude_unclear`
 
-Use `low_risk_diy` for cosmetic, minor, routine, or low-stakes maintenance.
+## Label Definitions
 
-Examples:
+### `low_risk_diy`
 
-- Painting, caulk, grout, trim, cabinet hinges
-- Small drywall patches
+Use this when the post sounds cosmetic, minor, routine, or low-stakes enough
+for a person to research and handle without immediate professional help.
+
+Common signals:
+
+- Painting, staining, peeling paint
+- Caulk, grout, trim, baseboards
+- Small drywall patches or nail holes
+- Loose knobs, cabinet hinges, squeaky doors
+- Cosmetic cracks or finish-quality questions
+- Basic tool, material, or technique questions with no safety concern
 - Wiper blades, air filters, light bulbs, cosmetic car trim
-- Basic tool or material questions with no safety concern
-
-Use `medium_risk_call_pro` when a professional, inspection, or careful repair
-is probably needed, but the post does not describe an immediate emergency.
 
 Examples:
 
-- Slow or contained leak
-- Mold, moisture, roof leak, sewer, septic, HVAC, water heater
-- Breaker, outlet, wiring, plumbing concerns without smoke, sparks, heat, or
-  burning smell
-- Brake replacement, suspension work, drivetrain, transmission, wheel bearing
-- Foundation or structural concern without active collapse
+- `What caulk should I use around this bathroom counter?`
+- `How do I repaint peeling trim?`
+- `Can I patch this small drywall hole myself?`
+- `How do I replace my windshield wipers?`
 
-Use `urgent_safety_risk` when the post suggests immediate danger or major active
-damage.
+### `medium_risk_call_pro`
+
+Use this when the post may need a professional, inspection, or timely repair,
+but does not sound like an immediate emergency.
+
+Common signals:
+
+- Slow or contained plumbing leaks
+- Water damage, roof leaks, basement water intrusion
+- Mold or recurring moisture
+- HVAC, furnace, AC, water heater problems
+- Breaker, outlet, wiring, plumbing, sewer, or septic concerns without urgent danger signs
+- Foundation cracks or structural concerns that are not actively failing
+- Brake replacement, suspension, drivetrain, transmission, wheel bearing, or fuel-system questions
+- Unclear repair situations where DIY guessing could make the problem worse
 
 Examples:
+
+- `Slow leak under sink has damaged the cabinet floor.`
+- `Mold found near basement window after rain.`
+- `Breaker keeps tripping, but no smoke or burning smell.`
+- `Should I replace my brake pads and rotors myself?`
+
+### `urgent_safety_risk`
+
+Use this when the post suggests possible immediate danger, major active damage,
+or a condition where delaying could cause injury or serious property loss.
+
+Common signals:
 
 - Gas smell, propane smell, carbon monoxide alarm
-- Smoke, sparks, burning smell, hot outlet, melted outlet
-- Active flooding, sewage backup, water pouring through ceiling
-- Sagging ceiling, bowing wall, collapsing floor
+- Smoke, sparks, burning smell, melted outlet, hot outlet
+- Active flooding, water pouring or gushing, sewage backup
+- Ceiling collapse, sagging ceiling, bowing wall, floor sagging
+- Exposed live wires or repeated breaker trips with heat, smoke, smell, or sparks
+- Structural movement or load-bearing concerns with visible failure
 - Brake failure, loose wheel or lug nuts, fuel leak, steering failure
-
-Use `exclude_unclear` only when the row is not usable as a labeled example.
 
 Examples:
 
-- Deleted or empty post
-- Photo-only post with no meaningful text
+- `Gas smell near furnace.`
+- `Outlet sparked and smells burnt.`
+- `Water is pouring through the ceiling.`
+- `Brake pedal went to the floor while driving.`
+
+### `exclude_unclear`
+
+Use this only when the row should not be used as a human evaluation example.
+
+Common reasons:
+
+- Deleted or removed text
+- Pure image post with no meaningful description
 - Joke, rant, update, or unrelated post
-- Not enough information to infer risk
-- The important context is only in missing photos or comments
+- Not really a DIY repair or maintenance question
+- Too little context to infer risk
+- Important information appears to depend on comments or missing photos
 
-If the post is a real DIY repair situation but hard to classify, do not exclude
-it. Pick the best risk label and set `human_confidence` to `low`.
+Do not use `exclude_unclear` just because the case is hard. If it is a real
+DIY repair situation but uncertain, choose the best risk label and set
+`human_confidence` to `low`.
 
-## 5. Use The Highest Realistic Risk
+## Tie-Breaking Rules
 
-If a post contains mixed signals, choose the highest realistic risk supported by
-the text.
+When a post fits more than one class, choose the highest realistic risk that is
+supported by the text.
 
 Examples:
 
@@ -120,24 +206,31 @@ Examples:
   `medium_risk_call_pro`.
 - A painting post with sparks or burning smell is usually
   `urgent_safety_risk`.
-- A car post about routine wiper blades is usually `low_risk_diy`.
-- A car post about replacing brakes is usually `medium_risk_call_pro`.
-- A car post about brake failure while driving is usually `urgent_safety_risk`.
+- A small cosmetic drywall crack is usually `low_risk_diy` unless the post
+  describes structural movement, sagging, or foundation issues.
+- Replacing wiper blades is usually `low_risk_diy`.
+- Replacing brakes or suspension parts is usually `medium_risk_call_pro` unless
+  the post describes active failure.
+- A loose wheel, brake failure, fuel leak, or steering failure is usually
+  `urgent_safety_risk`.
 
-## 6. Fill Human Confidence
+If the risk is unclear but real, use `medium_risk_call_pro` as the conservative
+middle label.
 
-Fill in `human_confidence` with:
+## Human Confidence
 
-- `high`: the label is obvious from the post
+Fill in `human_confidence` with one of:
+
+- `high`: the label is clear from the post
 - `medium`: the label is reasonable, but there is some ambiguity
-- `low`: the post is real, but difficult to judge
+- `low`: the post is real but difficult to classify
 
-Use `low` for hard cases instead of using `exclude_unclear`, as long as the row
-contains enough information to make a cautious judgment.
+Use `low` instead of `exclude_unclear` when there is enough information to make
+a cautious judgment.
 
-## 7. Compare Against The Auto Label
+## Audit Agreement
 
-Fill in `audit_agrees` after you choose `human_label`.
+`audit_agrees` compares your human label to the weak labeler's `auto_label`.
 
 Use `yes` when:
 
@@ -149,27 +242,26 @@ Use `no` when:
 - `auto_label` is blank
 - you choose `exclude_unclear` and the weak labeler chose a real class
 
-This column is not judging you. It lets us measure where the weak labeler agrees
-or disagrees with humans.
+This column is not judging the reviewer. It lets us measure where the weak
+labeler agrees or disagrees with humans.
 
-## 8. Add A Short Note
+## Human Review Notes
 
-Fill in `human_review_notes` with a short explanation. Notes are most useful
-when:
+Use `human_review_notes` for short explanations, especially when:
 
-- you disagree with `auto_label`
-- your confidence is `low`
+- `audit_agrees = no`
+- `human_confidence = low`
 - you choose `exclude_unclear`
-- the post has mixed signals
+- the post contains mixed risk signals
 
-Good examples:
+Good note examples:
 
-- `Contained leak, no active flooding described.`
-- `Brake failure while driving, urgent safety risk.`
-- `Photo-only post; not enough text to classify.`
+- `Leak is contained, no urgent flooding described.`
+- `Mentions sparks and burning smell, marking urgent.`
+- `Photo-only post; text does not describe the issue.`
 - `Gas company ruled out gas leak; remaining issue is odor investigation.`
 
-## 9. Add Reviewed Date
+## Reviewed Date
 
 Fill in `reviewed_at` with the date you reviewed the row.
 
@@ -179,7 +271,7 @@ Use this format:
 2026-06-05
 ```
 
-## 10. Example Row
+## Example Row
 
 Suppose the row says:
 
@@ -200,7 +292,21 @@ human_review_notes: Brake failure is an active vehicle safety issue.
 reviewed_at: 2026-06-05
 ```
 
-## 11. Quick Checklist
+## Why This Matters
+
+The weak labeler created rough labels for a large dataset, but those labels are
+not ground truth. The 400 manually reviewed rows are held out from training and
+will be used for final evaluation.
+
+Final evaluation will compare:
+
+- weak labeler vs. `human_label`
+- trained ML model vs. `human_label`
+
+This is what makes the project more credible than simply training a model to
+imitate keyword rules.
+
+## Quick Checklist
 
 For each row:
 
@@ -210,6 +316,6 @@ For each row:
 4. Choose one `human_label`.
 5. Fill `human_confidence`.
 6. Fill `audit_agrees`.
-7. Add a short note.
+7. Add a short `human_review_notes`.
 8. Add `reviewed_at`.
 

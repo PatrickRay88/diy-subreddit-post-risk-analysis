@@ -29,9 +29,7 @@ Current reviewer assignments:
 Start here:
 
 - `PROJECT_STATUS.md`: current project summary
-- `LABELING_GUIDE.md`: detailed label rules
-- `MANUAL_LABELING_WALKTHROUGH.md`: step-by-step spreadsheet walkthrough
-- `TEAM_REVIEW_INSTRUCTIONS.md`: short teammate instructions
+- `MANUAL_LABELING_WALKTHROUGH.md`: full team labeling guide and row-by-row walkthrough
 
 ## Key Files
 
@@ -51,7 +49,7 @@ These rules look for phrases associated with gas, sparks, flooding, leaks,
 mold, wiring, HVAC, plumbing, paint, caulk, trim, vehicle brakes, fuel leaks,
 tires, steering, suspension, and similar repair signals.
 
-Second, the team manually reviews a held-out 300-row sample. Those rows are not
+Second, the team manually reviews a held-out 400-row sample. Those rows are not
 used for weak-label training. They will be used for final evaluation.
 
 This avoids the main circularity problem:
@@ -145,8 +143,8 @@ Valid `human_label` values:
 - `urgent_safety_risk`
 - `exclude_unclear`
 
-See `LABELING_GUIDE.md` for the decision rules.
-See `MANUAL_LABELING_WALKTHROUGH.md` for the row-by-row workflow.
+See `MANUAL_LABELING_WALKTHROUGH.md` for the decision rules and row-by-row
+workflow.
 
 ## Model Training
 

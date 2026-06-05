@@ -184,17 +184,13 @@ Each teammate should review their assigned 100 rows and fill in:
 - `human_review_notes`
 - `reviewed_at`
 
-Main guide:
+Main manual-review guide:
 
-`LABELING_GUIDE.md`
-
-Quick team instructions:
-
-`TEAM_REVIEW_INSTRUCTIONS.md`
+`MANUAL_LABELING_WALKTHROUGH.md`
 
 ## Next Steps
 
-1. Complete the 300-row manual review.
+1. Complete the 400-row manual review.
 2. Combine reviewer files if needed, or update the shared manual-review file.
 3. Run `evaluate_human_review.py` against the completed manual review file.
 4. Report weak-label agreement with humans.
