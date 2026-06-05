@@ -2,6 +2,8 @@
 
 Use this file as the quick checklist for the team labeling task.
 
+For a row-by-row walkthrough, see `MANUAL_LABELING_WALKTHROUGH.md`.
+
 ## Files To Use
 
 Shared file:
@@ -38,6 +40,15 @@ Only fill in these columns:
 - `reviewed_at`
 
 Do not edit the generated weak-label columns.
+
+The file includes generated columns such as `review_hint`, `review_bucket`,
+`auto_label`, `auto_label_scores`, `auto_label_reason`, and
+`needs_human_review`. These are context for auditing the weak labeler, not the
+final human answer.
+
+If `review_hint` says `needs_review_unclear`, still read the post and choose the
+best `human_label` when possible. If `needs_human_review` says `no`, still
+review the row; it only means the weak labeler thought it was confident.
 
 ## Valid Values
 
@@ -106,7 +117,7 @@ Use `human_review_notes` to briefly explain disagreements.
 
 ## Important Project Detail
 
-These 300 manual-review rows are held out from model training. After review,
+These 400 manual-review rows are held out from model training. After review,
 they will be used to evaluate:
 
 - how often the weak labeler agrees with humans

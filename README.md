@@ -30,6 +30,7 @@ Start here:
 
 - `PROJECT_STATUS.md`: current project summary
 - `LABELING_GUIDE.md`: detailed label rules
+- `MANUAL_LABELING_WALKTHROUGH.md`: step-by-step spreadsheet walkthrough
 - `TEAM_REVIEW_INSTRUCTIONS.md`: short teammate instructions
 
 ## Key Files
@@ -145,6 +146,7 @@ Valid `human_label` values:
 - `exclude_unclear`
 
 See `LABELING_GUIDE.md` for the decision rules.
+See `MANUAL_LABELING_WALKTHROUGH.md` for the row-by-row workflow.
 
 ## Model Training
 
